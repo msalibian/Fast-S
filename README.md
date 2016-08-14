@@ -1,7 +1,7 @@
 A fast algorithm for S-estimators
 ================
 Matias Salibian
-2016-08-08
+2016-08-14
 
 A fast algorithm for S-estimators for linear regression
 -------------------------------------------------------
@@ -66,4 +66,47 @@ round(c(sest[[2]], summary(lmest)$sigma), 2)
 
     ## [1] 2.72 4.75
 
-I will later add here an illustration of the better predictions obtained with the robust estimator.
+An interesting experiment is to compare the prediction properties of the robust and least squares estimator. In order to do this, we will use 10-fold CV, and, compare the squared prediction errors of each estimator. To avoid penalizing poor predictions of outlying observations, we will compute the mean squared prediction error of the 75% smallest residuals (in other words, we will use a 25% trimmed mean squared prediction error):
+
+``` r
+tms <- function(e, trim=0.25) {
+  es <- sort(e^2)
+  n <- length(e)
+  return( mean( es[1:floor(n*(1-trim))] ) )
+}
+```
+
+The following chunck of code runs 10-fold CV and computes the S- and the LS- predictions.
+
+``` r
+n <- dim(x)[1]
+k <- 10
+set.seed(123)
+ii <- sample( (1:n) %% k )
+pr.s <- pr.ls <- rep(NA, n)
+for(j in 1:k) {
+  trs <- (ii != j)
+  tr.x <- x[ trs, ]
+  tr.y <- y[ trs ]
+  ses <- fast.s(x=tr.x, y=tr.y, int=0, N=500, k=2, best.r=5, seed=123)
+  lses <- lm(medv ~ ., data=Boston, subset = trs)
+  pr.ls[ !trs ] <- predict(lses, newdata = Boston[ !trs, ])
+  pr.s[ !trs ] <- as.vector( x[ !trs, ] %*% ses[[1]] )
+}
+```
+
+The resulting trimmed mean squared prediction errors are
+
+``` r
+tms( (y - pr.ls) )
+```
+
+    ## [1] 7.571167
+
+``` r
+tms( (y - pr.s) )
+```
+
+    ## [1] 6.191089
+
+showing that the S-estimator produces better predictions for the majority of the data. This phenomenon is observed when you repeat the above experiment using different 10-fold partitions. Below are the boxplots of the trimmed mean squared prediction errors obtained with 10 runs of the above experiment: ![](README_files/figure-markdown_github/CV2-1.png)
