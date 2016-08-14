@@ -117,7 +117,10 @@ fast.s <- function(x, y, int, N, k=2,
             x <- cbind(rep(1,n), x)
             p <- p + 1
     }
-
+    
+    # save existing random seed
+    if(exists(".Random.seed", where=.GlobalEnv)) old.seed <- .Random.seed
+    
     if(!missing(seed)) set.seed(seed)
 
     best.betas <- matrix(0, best.r, p)
@@ -175,6 +178,10 @@ fast.s <- function(x, y, int, N, k=2,
             super.best.beta <- tmp$beta.rw
         }   
     }
+    
+    # restore seed existing before call
+    if(exists('old.seed')) assign('.Random.seed', old.seed, envir=.GlobalEnv)
+    
     return(list(as.vector(super.best.beta), super.best.scale))
 
 }
