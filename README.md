@@ -1,7 +1,7 @@
 A fast algorithm for S-estimators
 ================
 Matias Salibian
-2016-08-16
+2016-08-22
 
 A fast algorithm for S-estimators for linear regression
 -------------------------------------------------------
